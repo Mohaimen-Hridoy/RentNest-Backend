@@ -28,6 +28,10 @@ app.use((req, res, next) => {
 });
 app.use(express.json());
 
+app.get('/', (_req: Request, res: Response) => {
+  res.json({ success: true, service: 'RentNest API', status: 'healthy' });
+});
+
 function configureCloudinary(): boolean {
   const { CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET } = process.env;
   if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET) {
