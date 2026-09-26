@@ -30,9 +30,9 @@ export const SEED_PROPERTIES: Property[] = [
     rating: 4.9,
     reviewCount: 24,
     images: [
-      '/src/assets/images/rentnest_gulshan_lakeview_1790194743752.jpg',
-      '/src/assets/images/rentnest_banani_garden_1790194754811.jpg',
-      '/src/assets/images/rentnest_baridhara_penthouse_1790194768319.jpg',
+      '/images/rentnest_gulshan_lakeview_1790194743752.jpg',
+      '/images/rentnest_banani_garden_1790194754811.jpg',
+      '/images/rentnest_baridhara_penthouse_1790194768319.jpg',
     ],
     mapCoords: {
       topPercent: 28,
@@ -99,9 +99,9 @@ export const SEED_PROPERTIES: Property[] = [
     rating: 4.8,
     reviewCount: 12,
     images: [
-      '/src/assets/images/rentnest_banani_garden_1790194754811.jpg',
-      '/src/assets/images/rentnest_gulshan_lakeview_1790194743752.jpg',
-      '/src/assets/images/rentnest_banani_studio_1790194778306.jpg',
+      '/images/rentnest_banani_garden_1790194754811.jpg',
+      '/images/rentnest_gulshan_lakeview_1790194743752.jpg',
+      '/images/rentnest_banani_studio_1790194778306.jpg',
     ],
     mapCoords: {
       topPercent: 20,
@@ -167,9 +167,9 @@ export const SEED_PROPERTIES: Property[] = [
     rating: 5.0,
     reviewCount: 8,
     images: [
-      '/src/assets/images/rentnest_baridhara_penthouse_1790194768319.jpg',
-      '/src/assets/images/rentnest_gulshan_lakeview_1790194743752.jpg',
-      '/src/assets/images/rentnest_banani_garden_1790194754811.jpg',
+      '/images/rentnest_baridhara_penthouse_1790194768319.jpg',
+      '/images/rentnest_gulshan_lakeview_1790194743752.jpg',
+      '/images/rentnest_banani_garden_1790194754811.jpg',
     ],
     mapCoords: {
       topPercent: 18,
@@ -235,9 +235,9 @@ export const SEED_PROPERTIES: Property[] = [
     rating: 4.7,
     reviewCount: 15,
     images: [
-      '/src/assets/images/rentnest_banani_studio_1790194778306.jpg',
-      '/src/assets/images/rentnest_banani_garden_1790194754811.jpg',
-      '/src/assets/images/rentnest_gulshan_lakeview_1790194743752.jpg',
+      '/images/rentnest_banani_studio_1790194778306.jpg',
+      '/images/rentnest_banani_garden_1790194754811.jpg',
+      '/images/rentnest_gulshan_lakeview_1790194743752.jpg',
     ],
     mapCoords: {
       topPercent: 42,
@@ -302,8 +302,8 @@ export const SEED_PROPERTIES: Property[] = [
     rating: 4.8,
     reviewCount: 19,
     images: [
-      '/src/assets/images/rentnest_gulshan_lakeview_1790194743752.jpg',
-      '/src/assets/images/rentnest_baridhara_penthouse_1790194768319.jpg',
+      '/images/rentnest_gulshan_lakeview_1790194743752.jpg',
+      '/images/rentnest_baridhara_penthouse_1790194768319.jpg',
     ],
     mapCoords: {
       topPercent: 68,
@@ -367,8 +367,8 @@ export const SEED_PROPERTIES: Property[] = [
     rating: 4.6,
     reviewCount: 10,
     images: [
-      '/src/assets/images/rentnest_banani_garden_1790194754811.jpg',
-      '/src/assets/images/rentnest_banani_studio_1790194778306.jpg',
+      '/images/rentnest_banani_garden_1790194754811.jpg',
+      '/images/rentnest_banani_studio_1790194778306.jpg',
     ],
     mapCoords: {
       topPercent: 82,
@@ -432,8 +432,8 @@ export const SEED_PROPERTIES: Property[] = [
     rating: 4.7,
     reviewCount: 14,
     images: [
-      '/src/assets/images/rentnest_banani_studio_1790194778306.jpg',
-      '/src/assets/images/rentnest_gulshan_lakeview_1790194743752.jpg',
+      '/images/rentnest_banani_studio_1790194778306.jpg',
+      '/images/rentnest_gulshan_lakeview_1790194743752.jpg',
     ],
     mapCoords: {
       topPercent: 75,

@@ -47,6 +47,7 @@ export const listingFormSchema = z.object({
   escrowProtected: z.boolean(),
   descriptionEn: z.string().min(20, 'Please write at least 20 characters description'),
   ownerPhone: z.string().regex(bdPhoneRegex, 'Enter valid Bangladeshi contact phone'),
+  images: z.array(z.string().url()).max(8).optional(),
 });
 
 export type ListingFormValues = z.infer<typeof listingFormSchema>;

@@ -1,10 +1,19 @@
 import express, { Request, Response } from 'express';
-import { SEED_PROPERTIES } from './src/data/seedProperties.ts';
+import { v2 as cloudinary } from 'cloudinary';
+import multer from 'multer';
+import { initializeDatabase, getProperties, getProperty, pool, saveBooking, saveEscrowInquiry, saveProperty } from './src/db.ts';
 import { Property, BookingResponse } from './src/types/property.ts';
 import { bookingFormSchema, listingFormSchema, escrowInquirySchema } from './src/schemas/validation.ts';
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 4000);
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { files: 8, fileSize: 8 * 1024 * 1024 },
+  fileFilter: (_req, file, callback) => {
+    callback(null, file.mimetype.startsWith('image/'));
+  },
+});
 
 app.use((req, res, next) => {
   const allowedOrigin = process.env.FRONTEND_ORIGIN ?? 'http://localhost:5173';
@@ -19,15 +28,60 @@ app.use((req, res, next) => {
 });
 app.use(express.json());
 
-// In-memory data store initialized with seed properties
-let properties: Property[] = [...SEED_PROPERTIES];
-const bookings: BookingResponse[] = [];
-const escrowInquiries: any[] = [];
+function configureCloudinary(): boolean {
+  const { CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET } = process.env;
+  if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET) {
+    return false;
+  }
+  cloudinary.config({
+    cloud_name: CLOUDINARY_CLOUD_NAME,
+    api_key: CLOUDINARY_API_KEY,
+    api_secret: CLOUDINARY_API_SECRET,
+  });
+  return true;
+}
+
+function uploadImage(file: Express.Multer.File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: 'rentnest/properties', resource_type: 'image' },
+      (error, result) => {
+        if (error || !result) {
+          reject(error ?? new Error('Cloudinary upload failed'));
+          return;
+        }
+        resolve(result.secure_url);
+      },
+    );
+    stream.end(file.buffer);
+  });
+}
+
+app.post('/api/uploads', upload.array('images', 8), async (req: Request, res: Response) => {
+  if (!configureCloudinary()) {
+    res.status(503).json({ success: false, message: 'Image upload is not configured' });
+    return;
+  }
+
+  const files = (req.files ?? []) as Express.Multer.File[];
+  if (files.length === 0) {
+    res.status(400).json({ success: false, message: 'At least one image is required' });
+    return;
+  }
+
+  try {
+    const urls = await Promise.all(files.map(uploadImage));
+    res.status(201).json({ success: true, data: urls });
+  } catch (error) {
+    console.error('Cloudinary upload failed', error);
+    res.status(502).json({ success: false, message: 'Could not upload images' });
+  }
+});
 
 // ================= API ENDPOINTS ================= //
 
 // GET /api/properties with rich filtering & sorting
-app.get('/api/properties', (req: Request, res: Response) => {
+app.get('/api/properties', async (req: Request, res: Response) => {
   const {
     search,
     minPrice,
@@ -39,7 +93,7 @@ app.get('/api/properties', (req: Request, res: Response) => {
     sortBy,
   } = req.query;
 
-  let results = [...properties];
+  let results = await getProperties();
 
   // 1. Search Query filter (checks title, address, neighborhood, subArea in both En & Bn)
   if (search && typeof search === 'string' && search.trim() !== '') {
@@ -116,8 +170,8 @@ app.get('/api/properties', (req: Request, res: Response) => {
 });
 
 // GET /api/properties/:id
-app.get('/api/properties/:id', (req: Request, res: Response) => {
-  const property = properties.find((p) => p.id === req.params.id);
+app.get('/api/properties/:id', async (req: Request, res: Response) => {
+  const property = await getProperty(req.params.id);
   if (!property) {
     res.status(404).json({ success: false, message: 'Property not found' });
     return;
@@ -126,7 +180,7 @@ app.get('/api/properties/:id', (req: Request, res: Response) => {
 });
 
 // POST /api/bookings (Schedule a visit with Zod validation)
-app.post('/api/bookings', (req: Request, res: Response) => {
+app.post('/api/bookings', async (req: Request, res: Response) => {
   const parseResult = bookingFormSchema.safeParse(req.body);
   if (!parseResult.success) {
     res.status(400).json({
@@ -138,7 +192,7 @@ app.post('/api/bookings', (req: Request, res: Response) => {
   }
 
   const data = parseResult.data;
-  const property = properties.find((p) => p.id === data.propertyId);
+  const property = await getProperty(data.propertyId);
   if (!property) {
     res.status(404).json({ success: false, message: 'Invalid property ID' });
     return;
@@ -153,7 +207,7 @@ app.post('/api/bookings', (req: Request, res: Response) => {
     verificationCode: bookingCode,
   };
 
-  bookings.unshift(newBooking);
+  await saveBooking(newBooking);
 
   res.status(201).json({
     success: true,
@@ -164,7 +218,7 @@ app.post('/api/bookings', (req: Request, res: Response) => {
 });
 
 // POST /api/properties (Landlord adding verified listing)
-app.post('/api/properties', (req: Request, res: Response) => {
+app.post('/api/properties', async (req: Request, res: Response) => {
   const parseResult = listingFormSchema.safeParse(req.body);
   if (!parseResult.success) {
     res.status(400).json({
@@ -205,7 +259,7 @@ app.post('/api/properties', (req: Request, res: Response) => {
     isNew: true,
     rating: 5.0,
     reviewCount: 1,
-    images: ['/src/assets/images/rentnest_gulshan_lakeview_1790194743752.jpg'],
+    images: val.images?.length ? val.images : ['/images/rentnest_gulshan_lakeview_1790194743752.jpg'],
     mapCoords: {
       topPercent: 35 + Math.random() * 20,
       leftPercent: 35 + Math.random() * 30,
@@ -238,7 +292,7 @@ app.post('/api/properties', (req: Request, res: Response) => {
     },
   };
 
-  properties.unshift(newProperty);
+  await saveProperty(newProperty);
 
   res.status(201).json({
     success: true,
@@ -248,7 +302,7 @@ app.post('/api/properties', (req: Request, res: Response) => {
 });
 
 // POST /api/escrow-inquiry
-app.post('/api/escrow-inquiry', (req: Request, res: Response) => {
+app.post('/api/escrow-inquiry', async (req: Request, res: Response) => {
   const parseResult = escrowInquirySchema.safeParse(req.body);
   if (!parseResult.success) {
     res.status(400).json({
@@ -265,7 +319,7 @@ app.post('/api/escrow-inquiry', (req: Request, res: Response) => {
     createdAt: new Date().toISOString(),
     escrowAccountRef: `ESC-BD-${Math.floor(10000000 + Math.random() * 90000000)}`,
   };
-  escrowInquiries.push(inquiry);
+  await saveEscrowInquiry(inquiry);
 
   res.status(201).json({
     success: true,
@@ -288,6 +342,14 @@ app.get('/api/tenancy-protection', (_req: Request, res: Response) => {
   });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`RentNest API running at http://0.0.0.0:${PORT}`);
-});
+initializeDatabase()
+  .then(() => {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`RentNest API running at http://0.0.0.0:${PORT}`);
+    });
+  })
+  .catch(async (error) => {
+    console.error('Failed to initialize database', error);
+    await pool.end();
+    process.exit(1);
+  });
