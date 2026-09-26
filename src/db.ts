@@ -57,7 +57,7 @@ export async function initializeDatabase(): Promise<void> {
       )
     )
     WHERE data->'images' IS NOT NULL
-      AND data->'images'::text LIKE '%/src/assets/images/%'
+      AND (data->'images')::text LIKE '%/src/assets/images/%'
   `);
 }
 
