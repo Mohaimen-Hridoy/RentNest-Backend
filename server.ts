@@ -16,7 +16,7 @@ const upload = multer({
 });
 
 app.use((req, res, next) => {
-  const allowedOrigin = process.env.FRONTEND_ORIGIN ?? 'http://localhost:5173';
+  const allowedOrigin = (process.env.FRONTEND_ORIGIN ?? 'http://localhost:5173').replace(/\/$/, '');
   res.header('Access-Control-Allow-Origin', allowedOrigin);
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
